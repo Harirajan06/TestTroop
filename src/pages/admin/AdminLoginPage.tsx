@@ -32,13 +32,8 @@ export const AdminLoginPage: React.FC = () => {
     if (res.error) {
       setError(res.error);
     } else {
-      navigate('/admin', { replace: true });
+      navigate('/plasma', { replace: true });
     }
-  };
-
-  const quickFillAdmin = () => {
-    setEmail('testtroopp@gmail.com');
-    setPassword('123@Hari11');
   };
 
   return (
@@ -108,18 +103,6 @@ export const AdminLoginPage: React.FC = () => {
           </button>
 
         </form>
-
-        {/* ADMIN CREDENTIAL QUICK AUTOFILL FOR CONVENIENCE */}
-        <div className="mt-6 pt-6 border-t border-white/10 text-center space-y-2">
-          <button 
-            type="button" 
-            onClick={quickFillAdmin}
-            className="w-full py-2.5 px-4 bg-indigo-950/60 hover:bg-indigo-900/80 border border-indigo-500/30 rounded-xl text-indigo-200 text-xs font-semibold flex items-center justify-center gap-2 transition-colors"
-          >
-            <ShieldCheck className="w-4 h-4 text-amber-400" />
-            <span>Autofill Authorized Admin Credentials</span>
-          </button>
-        </div>
 
         <div className="mt-6 text-center text-xs text-gray-500">
           <Link to="/" className="hover:text-gray-300 transition-colors">

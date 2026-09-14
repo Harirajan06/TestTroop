@@ -100,7 +100,7 @@ export const ContestCard: React.FC<ContestCardProps> = ({ contest, onOpenWinnerM
         {/* CTA BUTTON */}
         <div className="pt-2">
           <Link 
-            to={`/contests/${contest.slug}`} 
+            to={`/contests/${contest.id}`}
             className="btn btn-primary w-full text-center text-sm font-semibold flex items-center justify-center gap-2"
           >
             <span>View Contest Details</span>

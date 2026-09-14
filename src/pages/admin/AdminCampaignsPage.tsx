@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { dbStore } from '../../lib/supabase';
+import { dbStore, supabase, fetchRegistrationsAsync } from '../../lib/supabase';
 import { Campaign, Contest } from '../../types';
 import { 
   Mail, 
@@ -18,7 +18,6 @@ import {
 export const AdminCampaignsPage: React.FC = () => {
   const [campaigns, setCampaigns] = useState<Campaign[]>(dbStore.getCampaigns());
   const contests = dbStore.getContests();
-  const allUsers = dbStore.getUsers();
 
   const [showComposer, setShowComposer] = useState(false);
 
@@ -26,7 +25,7 @@ export const AdminCampaignsPage: React.FC = () => {
   const [title, setTitle] = useState('');
   const [subject, setSubject] = useState('');
   const [selectedContestId, setSelectedContestId] = useState<string>(contests[0]?.id || '');
-  const [recipientFilter, setRecipientFilter] = useState<'all_users' | 'registered' | 'submitted'>('registered');
+  const [recipientFilter, setRecipientFilter] = useState<'registered' | 'submitted'>('registered');
   const [templateHtml, setTemplateHtml] = useState<string>(
     `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #0b0f19; color: #f8fafc;">
   <h2 style="color: #6366f1;">Hello {{first_name}},</h2>
@@ -68,37 +67,76 @@ export const AdminCampaignsPage: React.FC = () => {
     setSendStatus(null);
 
     const contest = contests.find(c => c.id === selectedContestId);
-    
-    // Determine Target Recipient Count
-    let targetCount = allUsers.length;
-    if (recipientFilter === 'registered') {
-      targetCount = dbStore.getRegistrations().filter(r => r.contest_id === selectedContestId).length || 45;
-    } else if (recipientFilter === 'submitted') {
-      targetCount = dbStore.getSubmissions().filter(s => s.contest_id === selectedContestId).length || 18;
+
+    const registrations = await fetchRegistrationsAsync(selectedContestId);
+    const submittedRegistrationIds = new Set(dbStore.getSubmissions().filter(s => s.contest_id === selectedContestId).map(s => s.registration_id));
+
+    const targetRegs = recipientFilter === 'submitted'
+      ? registrations.filter(r => submittedRegistrationIds.has(r.id))
+      : registrations;
+
+    const recipients = targetRegs.map(r => ({
+      email: r.email,
+      first_name: r.full_name.split(' ')[0] || 'Tester',
+      full_name: r.full_name,
+      params: {
+        contest_name: contest?.title || '',
+        prize_amount: String(contest?.prize_amount || ''),
+        app_link: contest?.product_url || '',
+        submission_deadline: contest ? new Date(contest.submission_deadline).toLocaleDateString() : '',
+        whatsapp_link: contest?.whatsapp_group_url || '',
+      },
+    }));
+
+    if (recipients.length === 0) {
+      setSending(false);
+      setSendStatus('No matching recipients for this contest/filter — nothing was sent.');
+      return;
     }
 
-    // Save Campaign to DB
-    const newCamp = dbStore.saveCampaign({
+    let sentCount = 0;
+    let failedCount = 0;
+
+    try {
+      if (!supabase) throw new Error('Supabase is not configured in this environment.');
+      const { data, error } = await supabase.functions.invoke('send-email-campaign', {
+        body: {
+          campaignId: `campaign-${Date.now()}`,
+          recipients,
+          subject,
+          templateHtml,
+        },
+      });
+      if (error) throw error;
+      sentCount = data?.sentCount || 0;
+      failedCount = data?.failedCount || 0;
+    } catch (err: any) {
+      setSending(false);
+      setSendStatus(`Send failed: ${err.message || 'Edge function unavailable — has it been deployed with a BREVO_API_KEY secret?'}`);
+      return;
+    }
+
+    dbStore.saveCampaign({
       title,
       subject,
       contest_id: selectedContestId,
       recipient_filter: recipientFilter,
       template_html: templateHtml,
       status: 'completed',
-      total_recipients: targetCount,
-      sent_count: targetCount,
-      failed_count: 0,
+      total_recipients: recipients.length,
+      sent_count: sentCount,
+      failed_count: failedCount,
       sent_at: new Date().toISOString(),
     });
 
     setSending(false);
-    setSendStatus(`Brevo Campaign "${title}" successfully dispatched via server proxy to ${targetCount} recipients!`);
+    setSendStatus(`Campaign "${title}" dispatched via Brevo — ${sentCount} sent${failedCount ? `, ${failedCount} failed` : ''}.`);
     setCampaigns(dbStore.getCampaigns());
 
     setTimeout(() => {
       setShowComposer(false);
       setSendStatus(null);
-    }, 2500);
+    }, 3000);
   };
 
   return (
@@ -219,7 +257,6 @@ export const AdminCampaignsPage: React.FC = () => {
               >
                 <option value="registered">Contest Registered Testers Only</option>
                 <option value="submitted">Contest Submitting Testers Only</option>
-                <option value="all_users">All Registered Platform Testers</option>
               </select>
             </div>
           </div>

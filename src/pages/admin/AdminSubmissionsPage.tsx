@@ -21,7 +21,7 @@ export const AdminSubmissionsPage: React.FC = () => {
   const allBugs = dbStore.getBugReports().filter(b => b.contest_id === id);
   const allUI = dbStore.getUIFeedback().filter(u => u.contest_id === id);
   const allSuggestions = dbStore.getSuggestions().filter(s => s.contest_id === id);
-  const allUsers = dbStore.getUsers();
+  const registrations = dbStore.getRegistrations().filter(r => r.contest_id === id);
 
   const [activeTab, setActiveTab] = useState<'bugs' | 'ui' | 'suggestions'>('bugs');
 
@@ -30,7 +30,7 @@ export const AdminSubmissionsPage: React.FC = () => {
       
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link to="/admin/contests" className="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-white/10">
+          <Link to="/plasma/contests" className="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-white/10">
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
@@ -43,7 +43,7 @@ export const AdminSubmissionsPage: React.FC = () => {
           </div>
         </div>
 
-        <Link to={`/admin/contests/${id}/reviews`} className="btn btn-primary text-xs flex items-center gap-2">
+        <Link to={`/plasma/contests/${id}/reviews`} className="btn btn-primary text-xs flex items-center gap-2">
           <Trophy className="w-4 h-4 text-amber-400" /> Open Judging Engine
         </Link>
       </div>
@@ -92,7 +92,7 @@ export const AdminSubmissionsPage: React.FC = () => {
         <div className="space-y-4">
           {allBugs.length > 0 ? (
             allBugs.map(b => {
-              const tester = allUsers.find(u => u.id === b.user_id);
+              const tester = registrations.find(r => r.id === b.registration_id);
               return (
                 <div key={b.id} className="bg-glass-card p-6 rounded-2xl border border-white/10 space-y-4">
                   <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/5 pb-3">
@@ -153,7 +153,7 @@ export const AdminSubmissionsPage: React.FC = () => {
         <div className="space-y-4">
           {allUI.length > 0 ? (
             allUI.map(u => {
-              const tester = allUsers.find(usr => usr.id === u.user_id);
+              const tester = registrations.find(r => r.id === u.registration_id);
               return (
                 <div key={u.id} className="bg-glass-card p-6 rounded-2xl border border-white/10 space-y-4">
                   <div className="flex items-center justify-between border-b border-white/5 pb-3 text-xs">
@@ -189,7 +189,7 @@ export const AdminSubmissionsPage: React.FC = () => {
         <div className="space-y-4">
           {allSuggestions.length > 0 ? (
             allSuggestions.map(s => {
-              const tester = allUsers.find(usr => usr.id === s.user_id);
+              const tester = registrations.find(r => r.id === s.registration_id);
               return (
                 <div key={s.id} className="bg-glass-card p-6 rounded-2xl border border-white/10 space-y-3">
                   <div className="flex items-center justify-between border-b border-white/5 pb-3 text-xs">

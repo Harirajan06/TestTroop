@@ -2,19 +2,25 @@
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-heading: 'Outfit', 'Inter', sans-serif;
 
-  --bg-dark: #07090e;
-  --bg-card: #0e131f;
-  --bg-card-hover: #141b2d;
-  --bg-card-active: #192238;
-  --border-subtle: rgba(255, 255, 255, 0.07);
-  --border-glow: rgba(99, 102, 241, 0.3);
+  --background: #120948;
+  --background-deep: #0d0734;
+  --background-secondary: #170b56;
+  --background-card: rgba(26, 12, 75, 0.65);
 
-  --primary: #6366f1;
-  --primary-hover: #4f46e5;
+  --primary: #6D19FF;
+  --primary-light: #9B7BFF;
+  --primary-bright: #8B35FF;
+  --primary-pink: #C879FF;
 
-  --text-main: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
+  --text-primary: #FFFFFF;
+  --text-secondary: #D0C9EE;
+  --text-muted: #9389B8;
+
+  --border: rgba(151, 102, 255, 0.22);
+  --border-subtle: rgba(151, 102, 255, 0.15);
+  
+  --bg-dark: var(--background);
+  --text-main: var(--text-primary);
 }
 
 * {
@@ -23,8 +29,12 @@
 
 body {
   font-family: var(--font-sans);
-  background-color: var(--bg-dark);
-  color: var(--text-main);
+  background-color: #120948;
+  background-image: 
+    radial-gradient(circle at 50% 120px, rgba(62, 22, 160, 0.5) 0%, transparent 65%),
+    linear-gradient(180deg, #14094e 0%, #110944 35%, #10083e 70%, #0d0733 100%);
+  background-attachment: fixed;
+  color: var(--text-primary);
   line-height: 1.6;
   min-height: 100vh;
   overflow-x: hidden;
@@ -43,35 +53,36 @@ a {
 
 /* GRADIENTS & UTILITIES */
 .text-gradient {
-  background: linear-gradient(135deg, #818cf8 0%, #c084fc 50%, #e879f9 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-pink) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .text-gradient-cyan {
-  background: linear-gradient(135deg, #38bdf8 0%, #34d399 100%);
+  background: linear-gradient(135deg, #5DE7FF 0%, #28D9A0 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .bg-glass {
-  background: rgba(14, 19, 31, 0.85);
+  background: rgba(20, 8, 65, 0.55);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--border);
 }
 
-.bg-glass-card {
-  background: linear-gradient(180deg, rgba(20, 27, 45, 0.75) 0%, rgba(14, 19, 31, 0.85) 100%);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--border-subtle);
+.bg-glass-card, .glass-card {
+  background: var(--background-card);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(18px);
   border-radius: 16px;
-  transition: all 0.25s ease-in-out;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease-in-out;
 }
 
-.bg-glass-card:hover {
-  border-color: rgba(99, 102, 241, 0.4);
-  box-shadow: 0 12px 32px -10px rgba(0, 0, 0, 0.6), 0 0 20px -5px rgba(99, 102, 241, 0.15);
+.bg-glass-card:hover, .glass-card:hover {
+  border-color: rgba(151, 102, 255, 0.4);
+  box-shadow: 0 12px 32px -10px rgba(0, 0, 0, 0.4), 0 0 30px -5px rgba(109, 25, 255, 0.2);
 }
 
 /* BUTTONS */
@@ -92,15 +103,15 @@ a {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  background: linear-gradient(135deg, #6D19FF 0%, #4C00D9 100%);
   color: #ffffff;
-  box-shadow: 0 4px 14px 0 rgba(99, 102, 241, 0.35);
+  box-shadow: 0 4px 14px 0 rgba(109, 25, 255, 0.4);
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
-  box-shadow: 0 6px 20px 0 rgba(99, 102, 241, 0.5);
-  transform: translateY(-1px);
+  background: linear-gradient(135deg, #7C2FFF 0%, #6D19FF 100%);
+  box-shadow: 0 6px 20px 0 rgba(109, 25, 255, 0.6);
+  transform: translateY(-2px);
 }
 
 .btn-accent {
@@ -116,14 +127,14 @@ a {
 }
 
 .btn-secondary {
-  background: rgba(255, 255, 255, 0.06);
+  background: transparent;
   color: var(--text-main);
   border: 1px solid var(--border-subtle);
 }
 
 .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(139, 92, 246, 0.1);
+  border-color: rgba(139, 92, 246, 0.4);
 }
 
 .btn-ghost {

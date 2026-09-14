@@ -1,44 +1,29 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { dbStore, fetchContestsAsync } from '../lib/supabase';
-import { useAuth } from '../context/AuthContext';
-import { Contest, ContestRegistration, Submission } from '../types';
+import { Contest } from '../types';
 import { StatusBadge } from '../components/StatusBadge';
-import { SubmissionModal } from '../components/SubmissionModal';
-import { ConfirmationModal } from '../components/ConfirmationModal';
 import { WinnerModal } from '../components/WinnerModal';
-import { 
-  Trophy, 
-  Calendar, 
-  Clock, 
-  ExternalLink, 
-  Globe, 
-  Smartphone, 
-  MessageSquare, 
-  CheckCircle2, 
-  AlertCircle, 
-  FileText, 
-  Award, 
-  Send, 
-  Share2, 
+import { RegistrationModal } from '../components/RegistrationModal';
+import {
+  Trophy,
+  Calendar,
+  ExternalLink,
+  Globe,
+  CheckCircle2,
+  FileText,
+  Award,
   ShieldCheck,
-  IndianRupee 
 } from 'lucide-react';
 
 export const ContestDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
-  const { user } = useAuth();
-  const navigate = useNavigate();
 
   const [contest, setContest] = useState<Contest | null>(null);
-  const [userRegistration, setUserRegistration] = useState<ContestRegistration | null>(null);
-  const [userSubmission, setUserSubmission] = useState<Submission | null>(null);
+  const [justRegistered, setJustRegistered] = useState(false);
 
-  const [isRegistering, setIsRegistering] = useState(false);
-  const [showSubmissionModal, setShowSubmissionModal] = useState(false);
-  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [showRegistrationModal, setShowRegistrationModal] = useState(false);
   const [showWinnerModal, setShowWinnerModal] = useState(false);
-  const [customConfirmationMsg, setCustomConfirmationMsg] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     if (!slug) return;
@@ -52,21 +37,11 @@ export const ContestDetailPage: React.FC = () => {
 
       if (found) {
         setContest(found);
-
-        if (user) {
-          const regs = dbStore.getRegistrations();
-          const reg = regs.find(r => r.contest_id === found.id && r.user_id === user.id);
-          setUserRegistration(reg || null);
-
-          const subs = dbStore.getSubmissions();
-          const sub = subs.find(s => s.contest_id === found.id && s.user_id === user.id);
-          setUserSubmission(sub || null);
-        }
       }
     };
 
     loadContest();
-  }, [slug, user]);
+  }, [slug]);
 
   if (!contest) {
     return (
@@ -94,34 +69,10 @@ export const ContestDetailPage: React.FC = () => {
   const isTestingLive = contest.status === 'testing_live';
   const isTestingStarted = ['testing_live', 'submission_closed', 'results_pending', 'winner_announced', 'completed'].includes(contest.status);
 
-  const handleRegister = async () => {
-    if (!user) {
-      navigate('/login', { state: { from: { pathname: `/contests/${contest.slug}` } } });
-      return;
-    }
-
-    setIsRegistering(true);
-    try {
-      const reg = dbStore.registerUserForContest(contest.id, user.id);
-      setUserRegistration(reg);
-      setContest({ ...contest, registration_count: (contest.registration_count || 0) + 1 });
-    } catch (err: any) {
-      alert(err.message || 'Registration failed');
-    } finally {
-      setIsRegistering(false);
-    }
-  };
-
-  const handleSubmissionSuccess = (msg?: string) => {
-    setShowSubmissionModal(false);
-    setCustomConfirmationMsg(msg);
-    setShowConfirmationModal(true);
-
-    if (user) {
-      const subs = dbStore.getSubmissions();
-      const sub = subs.find(s => s.contest_id === contest.id && s.user_id === user.id);
-      setUserSubmission(sub || null);
-    }
+  const handleRegistrationSuccess = () => {
+    setShowRegistrationModal(false);
+    setJustRegistered(true);
+    setContest({ ...contest, registration_count: (contest.registration_count || 0) + 1 });
   };
 
   return (
@@ -164,28 +115,19 @@ export const ContestDetailPage: React.FC = () => {
               <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider block">Total Prize Pool</span>
               <span className="text-3xl font-extrabold text-gradient font-heading">₹{contest.prize_amount.toLocaleString()}</span>
               
-              {!userRegistration ? (
+              {!justRegistered ? (
                 <button
-                  onClick={handleRegister}
-                  disabled={!isRegistrationOpen || isRegistering}
+                  onClick={() => setShowRegistrationModal(true)}
+                  disabled={!isRegistrationOpen}
                   className="btn btn-primary w-full py-3 text-sm font-semibold shadow-lg shadow-indigo-600/30"
                 >
-                  {isRegistering ? 'Registering...' : isRegistrationOpen ? 'Register For Contest' : 'Registration Closed'}
+                  {isRegistrationOpen ? 'Register For Contest' : 'Registration Closed'}
                 </button>
-              ) : userSubmission ? (
+              ) : (
                 <div className="p-2.5 bg-emerald-500/15 border border-emerald-500/30 rounded-xl text-emerald-300 text-xs font-bold flex items-center justify-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                  <span>Findings Submitted!</span>
+                  <span>Registered! Check your email closer to the contest date.</span>
                 </div>
-              ) : (
-                <button
-                  onClick={() => setShowSubmissionModal(true)}
-                  disabled={!isTestingLive}
-                  className="btn btn-accent w-full py-3 text-sm font-semibold shadow-lg shadow-cyan-600/30"
-                >
-                  <Send className="w-4 h-4" />
-                  <span>Submit Testing Findings</span>
-                </button>
               )}
             </div>
           </div>
@@ -214,9 +156,9 @@ export const ContestDetailPage: React.FC = () => {
         </div>
       )}
 
-      {/* WHATSAPP & PRODUCT URL BAR */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        
+      {/* PRODUCT URL BAR */}
+      <div className="grid grid-cols-1 gap-6">
+
         {/* PRODUCT URL */}
         {isTestingStarted ? (
           <div className="bg-glass-card p-6 rounded-2xl border border-white/10 flex items-center justify-between">
@@ -255,32 +197,6 @@ export const ContestDetailPage: React.FC = () => {
             </span>
           </div>
         )}
-
-        {/* WHATSAPP GROUP LINK */}
-        <div className="bg-gradient-to-r from-emerald-950/40 to-slate-950 p-6 rounded-2xl border border-emerald-500/30 flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-xs text-emerald-400 font-semibold block flex items-center gap-1">
-              <MessageSquare className="w-3.5 h-3.5" /> Contest WhatsApp Group
-            </span>
-            <span className="text-sm text-gray-300 block">
-              {userRegistration ? 'Join live tester community for Q&A' : 'Register to unlock WhatsApp link'}
-            </span>
-          </div>
-
-          {contest.whatsapp_group_url ? (
-            <a 
-              href={contest.whatsapp_group_url} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="btn bg-emerald-600 hover:bg-emerald-500 text-white btn-sm flex items-center gap-1.5 shrink-0 shadow-lg shadow-emerald-600/30"
-            >
-              <span>Join Contest WhatsApp Group</span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </a>
-          ) : (
-            <span className="text-xs text-gray-500 italic">No link configured</span>
-          )}
-        </div>
 
       </div>
 
@@ -372,29 +288,20 @@ export const ContestDetailPage: React.FC = () => {
       </div>
 
       {/* MODALS */}
-      {showSubmissionModal && (
-        <SubmissionModal
-          contest={contest}
-          isOpen={showSubmissionModal}
-          onClose={() => setShowSubmissionModal(false)}
-          onSuccess={handleSubmissionSuccess}
-        />
-      )}
-
-      {showConfirmationModal && (
-        <ConfirmationModal
-          contest={contest}
-          isOpen={showConfirmationModal}
-          onClose={() => setShowConfirmationModal(false)}
-          customMessage={customConfirmationMsg}
-        />
-      )}
-
       {showWinnerModal && contest.winner && (
         <WinnerModal
           contest={contest}
           isOpen={showWinnerModal}
           onClose={() => setShowWinnerModal(false)}
+        />
+      )}
+
+      {showRegistrationModal && (
+        <RegistrationModal
+          contest={contest}
+          isOpen={showRegistrationModal}
+          onClose={() => setShowRegistrationModal(false)}
+          onSuccess={handleRegistrationSuccess}
         />
       )}
 

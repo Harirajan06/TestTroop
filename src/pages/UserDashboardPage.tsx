@@ -8,9 +8,9 @@ import { Trophy, CheckCircle2, Send, Clock, Award, ArrowRight, User } from 'luci
 export const UserDashboardPage: React.FC = () => {
   const { user, isAdmin } = useAuth();
 
-  // If logged in as Admin, redirect directly to Admin Control Center /admin
+  // If logged in as Admin, redirect directly to Admin Control Center /plasma
   if (user && isAdmin) {
-    return <Navigate to="/admin" replace />;
+    return <Navigate to="/plasma" replace />;
   }
   
   const allContests = dbStore.getContests();

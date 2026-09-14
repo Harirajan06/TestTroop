@@ -1,55 +1,50 @@
 import React, { useState, useEffect } from 'react';
-import { dbStore, fetchProfilesAsync } from '../../lib/supabase';
-import { UserProfile, UserRole } from '../../types';
-import { Users, Search, Mail, Phone, ShieldCheck, Trash2 } from 'lucide-react';
+import { dbStore, fetchRegistrationsAsync, fetchContestsAsync } from '../../lib/supabase';
+import { ContestRegistration, Contest } from '../../types';
+import { Users, Search, Mail, Phone, Linkedin, Trash2, Trophy } from 'lucide-react';
 
 export const AdminUsersPage: React.FC = () => {
-  const [users, setUsers] = useState<UserProfile[]>(() => dbStore.getUsers());
+  const [registrations, setRegistrations] = useState<ContestRegistration[]>(() => dbStore.getRegistrations());
+  const [contests, setContests] = useState<Contest[]>(() => dbStore.getContests());
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    fetchProfilesAsync().then(fetched => {
-      if (fetched && fetched.length > 0) {
-        setUsers(fetched);
-      }
+    Promise.all([fetchRegistrationsAsync(), fetchContestsAsync()]).then(([fetchedRegs, fetchedContests]) => {
+      if (fetchedRegs) setRegistrations(fetchedRegs);
+      if (fetchedContests) setContests(fetchedContests);
     });
   }, []);
 
-  const filteredUsers = users.filter(u => 
-    u.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    u.mobile_number.includes(searchQuery)
+  const contestTitle = (contestId: string) => contests.find(c => c.id === contestId)?.title || 'Unknown Contest';
+
+  const filteredRegistrations = registrations.filter(r =>
+    r.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    r.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    r.mobile_number.includes(searchQuery)
   );
 
-  const toggleUserRole = (user: UserProfile) => {
-    const newRole: UserRole = user.role === 'admin' ? 'user' : 'admin';
-    const updated = { ...user, role: newRole };
-    dbStore.saveUser(updated);
-    setUsers(dbStore.getUsers());
-  };
-
-  const handleDeleteUser = (id: string, name: string) => {
-    if (window.confirm(`Are you sure you want to remove user "${name}"?`)) {
-      dbStore.deleteUser(id);
-      setUsers(dbStore.getUsers());
+  const handleDeleteRegistration = (id: string, name: string) => {
+    if (window.confirm(`Remove ${name}'s registration? This cannot be undone.`)) {
+      dbStore.deleteRegistration(id);
+      setRegistrations(dbStore.getRegistrations());
     }
   };
 
   return (
     <div className="space-y-8">
-      
+
       <div>
         <h1 className="text-3xl font-bold text-white flex items-center gap-2">
-          <Users className="w-7 h-7 text-cyan-400" /> Registered Tester Roster ({users.length})
+          <Users className="w-7 h-7 text-cyan-400" /> Registered Tester Roster ({registrations.length})
         </h1>
-        <p className="text-gray-400 text-xs mt-1">Manage user profiles, contact metrics, and authorization roles</p>
+        <p className="text-gray-400 text-xs mt-1">Everyone who has registered for a contest, across all contests</p>
       </div>
 
       {/* SEARCH */}
       <div className="bg-glass-card p-4 rounded-2xl border border-white/10 max-w-md">
         <div className="relative">
-          <input 
-            type="text" 
+          <input
+            type="text"
             placeholder="Search by name, email, or phone..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
@@ -59,58 +54,55 @@ export const AdminUsersPage: React.FC = () => {
         </div>
       </div>
 
-      {/* USERS TABLE */}
-      {filteredUsers.length > 0 ? (
+      {/* REGISTRATIONS TABLE */}
+      {filteredRegistrations.length > 0 ? (
         <div className="bg-glass-card rounded-3xl border border-white/10 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="bg-slate-900/90 text-gray-400 font-semibold border-b border-white/10 uppercase tracking-wider">
                 <tr>
-                  <th className="p-4">User</th>
+                  <th className="p-4">Tester</th>
+                  <th className="p-4">Contest</th>
                   <th className="p-4">Email</th>
-                  <th className="p-4">Mobile Phone</th>
-                  <th className="p-4">Role</th>
-                  <th className="p-4">Joined Date</th>
+                  <th className="p-4">Mobile</th>
+                  <th className="p-4">LinkedIn</th>
+                  <th className="p-4">Registered Date</th>
                   <th className="p-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5 text-gray-300">
-                {filteredUsers.map(u => (
-                  <tr key={u.id} className="hover:bg-white/5 transition-colors">
-                    <td className="p-4 font-bold text-white flex items-center gap-3">
-                      <img 
-                        src={u.avatar_url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80'} 
-                        alt={u.full_name} 
-                        className="w-8 h-8 rounded-full object-cover ring-2 ring-indigo-500/30"
-                      />
-                      <span>{u.full_name}</span>
+                {filteredRegistrations.map(r => (
+                  <tr key={r.id} className="hover:bg-white/5 transition-colors">
+                    <td className="p-4 font-bold text-white">{r.full_name}</td>
+                    <td className="p-4 text-gray-300">
+                      <span className="flex items-center gap-1.5"><Trophy className="w-3.5 h-3.5 text-amber-400 shrink-0" /> {contestTitle(r.contest_id)}</span>
                     </td>
-                    <td className="p-4 text-indigo-300 font-medium">{u.email}</td>
-                    <td className="p-4 text-gray-300 font-mono">{u.mobile_number}</td>
+                    <td className="p-4 text-indigo-300 font-medium">
+                      <span className="flex items-center gap-1.5"><Mail className="w-3.5 h-3.5 text-gray-400 shrink-0" /> {r.email}</span>
+                    </td>
+                    <td className="p-4 text-gray-300 font-mono">
+                      <span className="flex items-center gap-1.5"><Phone className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> {r.mobile_number}</span>
+                    </td>
                     <td className="p-4">
-                      <span className={`badge ${u.role === 'admin' ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'badge-registration_open'}`}>
-                        {u.role.toUpperCase()}
-                      </span>
+                      {r.linkedin_url ? (
+                        <a href={r.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-indigo-300 hover:underline flex items-center gap-1.5">
+                          <Linkedin className="w-3.5 h-3.5" /> Profile
+                        </a>
+                      ) : (
+                        <span className="text-gray-500">N/A</span>
+                      )}
                     </td>
                     <td className="p-4 text-gray-400">
-                      {new Date(u.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      {new Date(r.registered_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </td>
                     <td className="p-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button 
-                          onClick={() => toggleUserRole(u)}
-                          className="btn btn-secondary btn-sm text-[11px]"
-                        >
-                          Set as {u.role === 'admin' ? 'Tester' : 'Admin'}
-                        </button>
-                        <button 
-                          onClick={() => handleDeleteUser(u.id, u.full_name)}
-                          className="p-2 text-red-400 hover:text-white rounded-lg hover:bg-red-500/20"
-                          title="Remove User"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => handleDeleteRegistration(r.id, r.full_name)}
+                        className="p-2 text-red-400 hover:text-white rounded-lg hover:bg-red-500/20"
+                        title="Remove Registration"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -121,9 +113,9 @@ export const AdminUsersPage: React.FC = () => {
       ) : (
         <div className="bg-glass p-12 rounded-3xl text-center space-y-3 max-w-lg mx-auto border border-white/10">
           <Users className="w-12 h-12 text-gray-500 mx-auto" />
-          <h3 className="text-xl font-bold text-white">No Registered Users Found</h3>
+          <h3 className="text-xl font-bold text-white">No Registered Testers Found</h3>
           <p className="text-gray-400 text-sm">
-            Newly registered testers will appear here automatically upon signup.
+            Testers who register for a contest will appear here automatically.
           </p>
         </div>
       )}

@@ -14,12 +14,12 @@ import {
 
 export const AdminSidebar: React.FC = () => {
   const navItems = [
-    { to: '/admin', label: 'Overview Dashboard', icon: LayoutDashboard, end: true },
-    { to: '/admin/contests', label: 'Manage Contests', icon: Trophy },
-    { to: '/admin/contests/create', label: 'Create Contest', icon: PlusCircle },
-    { to: '/admin/users', label: 'Registered Testers', icon: Users },
-    { to: '/admin/campaigns', label: 'Brevo Campaigns', icon: Mail },
-    { to: '/admin/settings', label: 'Platform Settings', icon: Settings },
+    { to: '/plasma', label: 'Overview Dashboard', icon: LayoutDashboard, end: true },
+    { to: '/plasma/contests', label: 'Manage Contests', icon: Trophy },
+    { to: '/plasma/contests/create', label: 'Create Contest', icon: PlusCircle },
+    { to: '/plasma/users', label: 'Registered Testers', icon: Users },
+    { to: '/plasma/campaigns', label: 'Brevo Campaigns', icon: Mail },
+    { to: '/plasma/settings', label: 'Platform Settings', icon: Settings },
   ];
 
   return (

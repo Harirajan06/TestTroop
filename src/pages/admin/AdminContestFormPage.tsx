@@ -113,7 +113,7 @@ export const AdminContestFormPage: React.FC = () => {
     };
 
     dbStore.saveContest(contestObj as Contest);
-    navigate('/admin/contests');
+    navigate('/plasma/contests');
   };
 
   return (
@@ -121,7 +121,7 @@ export const AdminContestFormPage: React.FC = () => {
       
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link to="/admin/contests" className="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-white/10">
+          <Link to="/plasma/contests" className="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-white/10">
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <h1 className="text-2xl font-bold text-white">
@@ -426,7 +426,7 @@ export const AdminContestFormPage: React.FC = () => {
         </div>
 
         <div className="pt-4 border-t border-white/10 flex items-center justify-end gap-4">
-          <Link to="/admin/contests" className="btn btn-ghost">Cancel</Link>
+          <Link to="/plasma/contests" className="btn btn-ghost">Cancel</Link>
           <button type="submit" className="btn btn-primary px-8 flex items-center gap-2">
             <Save className="w-4 h-4" /> Save & Publish Contest
           </button>

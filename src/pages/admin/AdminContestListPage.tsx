@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { dbStore, fetchContestsAsync } from '../../lib/supabase';
+import { dbStore, fetchContestsAsync, fetchRegistrationsAsync } from '../../lib/supabase';
 import { StatusBadge } from '../../components/StatusBadge';
-import { Contest } from '../../types';
+import { Contest, ContestRegistration, Submission } from '../../types';
 import { 
   Trophy, 
   PlusCircle, 
@@ -17,6 +17,8 @@ import {
 
 export const AdminContestListPage: React.FC = () => {
   const [contests, setContests] = useState<Contest[]>(() => dbStore.getContests());
+  const [registrations, setRegistrations] = useState<ContestRegistration[]>(() => dbStore.getRegistrations());
+  const [submissions, setSubmissions] = useState<Submission[]>(() => dbStore.getSubmissions());
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
@@ -25,7 +27,14 @@ export const AdminContestListPage: React.FC = () => {
         setContests(fetched);
       }
     });
+    fetchRegistrationsAsync().then(fetched => {
+      setRegistrations(fetched);
+      setSubmissions(dbStore.getSubmissions());
+    });
   }, []);
+
+  const registeredCount = (contestId: string) => registrations.filter(r => r.contest_id === contestId).length;
+  const submittedCount = (contestId: string) => submissions.filter(s => s.contest_id === contestId).length;
 
   const filteredContests = contests.filter(c => 
     c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -48,7 +57,7 @@ export const AdminContestListPage: React.FC = () => {
           <p className="text-gray-400 text-xs mt-1">Create, publish, edit, review submissions, and announce winners</p>
         </div>
 
-        <Link to="/admin/contests/create" className="btn btn-primary text-xs flex items-center gap-2">
+        <Link to="/plasma/contests/create" className="btn btn-primary text-xs flex items-center gap-2">
           <PlusCircle className="w-4 h-4" /> Create Contest
         </Link>
       </div>
@@ -86,7 +95,9 @@ export const AdminContestListPage: React.FC = () => {
               {filteredContests.map(c => (
                 <tr key={c.id} className="hover:bg-white/5 transition-colors">
                   <td className="p-4 font-bold text-white max-w-xs">
-                    <span className="truncate block">{c.title}</span>
+                    <Link to={`/plasma/contests/${c.id}`} className="truncate block hover:text-indigo-300 hover:underline">
+                      {c.title}
+                    </Link>
                     <span className="text-[11px] text-gray-400 font-normal">{c.product_name}</span>
                   </td>
                   <td className="p-4 capitalize">
@@ -100,13 +111,13 @@ export const AdminContestListPage: React.FC = () => {
                     ${c.prize_amount.toLocaleString()}
                   </td>
                   <td className="p-4">
-                    <Link to={`/admin/contests/${c.id}/participants`} className="text-indigo-400 hover:underline font-semibold flex items-center gap-1">
-                      <Users className="w-3.5 h-3.5" /> {c.registration_count || 0} Registered
+                    <Link to={`/plasma/contests/${c.id}/participants`} className="text-indigo-400 hover:underline font-semibold flex items-center gap-1">
+                      <Users className="w-3.5 h-3.5" /> {registeredCount(c.id)} Registered
                     </Link>
                   </td>
                   <td className="p-4">
-                    <Link to={`/admin/contests/${c.id}/submissions`} className="text-cyan-400 hover:underline font-semibold flex items-center gap-1">
-                      <FileText className="w-3.5 h-3.5" /> {c.submission_count || 0} Submissions
+                    <Link to={`/plasma/contests/${c.id}/submissions`} className="text-cyan-400 hover:underline font-semibold flex items-center gap-1">
+                      <FileText className="w-3.5 h-3.5" /> {submittedCount(c.id)} Submissions
                     </Link>
                   </td>
                   <td className="p-4 text-right">
@@ -114,13 +125,13 @@ export const AdminContestListPage: React.FC = () => {
                       <Link to={`/contests/${c.slug}`} title="View Public Page" className="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-white/10">
                         <Eye className="w-4 h-4" />
                       </Link>
-                      <Link to={`/admin/contests/${c.id}/edit`} title="Edit Contest" className="p-2 text-indigo-400 hover:text-white rounded-lg hover:bg-indigo-500/20">
+                      <Link to={`/plasma/contests/${c.id}/edit`} title="Edit Contest" className="p-2 text-indigo-400 hover:text-white rounded-lg hover:bg-indigo-500/20">
                         <Edit3 className="w-4 h-4" />
                       </Link>
-                      <Link to={`/admin/contests/${c.id}/reviews`} title="Judge Submissions" className="p-2 text-amber-400 hover:text-white rounded-lg hover:bg-amber-500/20">
+                      <Link to={`/plasma/contests/${c.id}/reviews`} title="Judge Submissions" className="p-2 text-amber-400 hover:text-white rounded-lg hover:bg-amber-500/20">
                         <Trophy className="w-4 h-4" />
                       </Link>
-                      <Link to={`/admin/contests/${c.id}/winner`} title="Publish Winner" className="p-2 text-pink-400 hover:text-white rounded-lg hover:bg-pink-500/20">
+                      <Link to={`/plasma/contests/${c.id}/winner`} title="Publish Winner" className="p-2 text-pink-400 hover:text-white rounded-lg hover:bg-pink-500/20">
                         <Award className="w-4 h-4" />
                       </Link>
                       <button 

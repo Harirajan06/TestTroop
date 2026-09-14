@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { dbStore, fetchProfilesAsync, fetchContestsAsync, fetchRegistrationsAsync } from '../../lib/supabase';
-import { Contest, UserProfile } from '../../types';
+import { dbStore, fetchContestsAsync, fetchRegistrationsAsync } from '../../lib/supabase';
+import { Contest } from '../../types';
 import { 
   Trophy, 
   Users, 
@@ -17,7 +17,6 @@ import {
 
 export const AdminDashboardPage: React.FC = () => {
   const [contests, setContests] = useState<Contest[]>(() => dbStore.getContests());
-  const [users, setUsers] = useState<UserProfile[]>(() => dbStore.getUsers());
   const [allRegistrations, setAllRegistrations] = useState(() => dbStore.getRegistrations());
   const submissions = dbStore.getSubmissions();
   const winners = dbStore.getWinners();
@@ -26,11 +25,9 @@ export const AdminDashboardPage: React.FC = () => {
   useEffect(() => {
     Promise.all([
       fetchContestsAsync(),
-      fetchProfilesAsync(),
       fetchRegistrationsAsync()
-    ]).then(([fetchedContests, fetchedUsers, fetchedRegs]) => {
+    ]).then(([fetchedContests, fetchedRegs]) => {
       if (fetchedContests) setContests(fetchedContests);
-      if (fetchedUsers) setUsers(fetchedUsers);
       if (fetchedRegs) setAllRegistrations(fetchedRegs);
     });
   }, []);
@@ -51,7 +48,7 @@ export const AdminDashboardPage: React.FC = () => {
           <p className="text-gray-400 text-xs mt-1">Platform metrics, active testing contests, and submission status</p>
         </div>
 
-        <Link to="/admin/contests/create" className="btn btn-primary text-xs flex items-center gap-2">
+        <Link to="/plasma/contests/create" className="btn btn-primary text-xs flex items-center gap-2">
           <PlusCircle className="w-4 h-4" /> Create New Contest
         </Link>
       </div>
@@ -61,11 +58,11 @@ export const AdminDashboardPage: React.FC = () => {
         
         <div className="bg-glass-card p-6 rounded-2xl border border-white/10 space-y-2">
           <div className="flex items-center justify-between text-gray-400">
-            <span className="text-xs font-semibold uppercase">Total Users</span>
+            <span className="text-xs font-semibold uppercase">Total Registrations</span>
             <Users className="w-5 h-5 text-indigo-400" />
           </div>
-          <span className="text-3xl font-black text-white font-heading">{users.length}</span>
-          <span className="text-[11px] text-gray-400 block">Registered QA Testers</span>
+          <span className="text-3xl font-black text-white font-heading">{allRegistrations.length}</span>
+          <span className="text-[11px] text-gray-400 block">Across All Contests</span>
         </div>
 
         <div className="bg-glass-card p-6 rounded-2xl border border-white/10 space-y-2">
@@ -106,7 +103,7 @@ export const AdminDashboardPage: React.FC = () => {
             <h3 className="text-lg font-bold text-white flex items-center gap-2">
               <Trophy className="w-5 h-5 text-amber-400" /> Manage Contests
             </h3>
-            <Link to="/admin/contests" className="text-xs text-indigo-400 hover:underline">
+            <Link to="/plasma/contests" className="text-xs text-indigo-400 hover:underline">
               View All Contests ({contests.length}) →
             </Link>
           </div>
@@ -122,11 +119,11 @@ export const AdminDashboardPage: React.FC = () => {
                   <span className="text-gray-400">{c.product_name} • ${c.prize_amount.toLocaleString()} Prize</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Link to={`/admin/contests/${c.id}/participants`} className="btn btn-ghost btn-sm text-[11px]">
+                  <Link to={`/plasma/contests/${c.id}/participants`} className="btn btn-ghost btn-sm text-[11px]">
                     Participants ({allRegistrations.filter(r => r.contest_id === c.id).length})
                   </Link>
-                  <Link to={`/admin/contests/${c.id}/submissions`} className="btn btn-secondary btn-sm text-[11px]">
-                    Submissions ({c.submission_count || 0})
+                  <Link to={`/plasma/contests/${c.id}/submissions`} className="btn btn-secondary btn-sm text-[11px]">
+                    Submissions ({submissions.filter(s => s.contest_id === c.id).length})
                   </Link>
                 </div>
               </div>
@@ -141,17 +138,17 @@ export const AdminDashboardPage: React.FC = () => {
           </h3>
 
           <div className="space-y-2 text-xs">
-            <Link to="/admin/contests/create" className="p-3.5 bg-slate-900/80 hover:bg-slate-800 rounded-xl border border-white/5 flex items-center justify-between text-gray-200 transition-colors">
+            <Link to="/plasma/contests/create" className="p-3.5 bg-slate-900/80 hover:bg-slate-800 rounded-xl border border-white/5 flex items-center justify-between text-gray-200 transition-colors">
               <span className="font-semibold">Create New Contest</span>
               <PlusCircle className="w-4 h-4 text-indigo-400" />
             </Link>
 
-            <Link to="/admin/campaigns" className="p-3.5 bg-slate-900/80 hover:bg-slate-800 rounded-xl border border-white/5 flex items-center justify-between text-gray-200 transition-colors">
+            <Link to="/plasma/campaigns" className="p-3.5 bg-slate-900/80 hover:bg-slate-800 rounded-xl border border-white/5 flex items-center justify-between text-gray-200 transition-colors">
               <span className="font-semibold">Brevo Email Campaigns</span>
               <Mail className="w-4 h-4 text-pink-400" />
             </Link>
 
-            <Link to="/admin/users" className="p-3.5 bg-slate-900/80 hover:bg-slate-800 rounded-xl border border-white/5 flex items-center justify-between text-gray-200 transition-colors">
+            <Link to="/plasma/users" className="p-3.5 bg-slate-900/80 hover:bg-slate-800 rounded-xl border border-white/5 flex items-center justify-between text-gray-200 transition-colors">
               <span className="font-semibold">Tester Database & Roster</span>
               <Users className="w-4 h-4 text-cyan-400" />
             </Link>

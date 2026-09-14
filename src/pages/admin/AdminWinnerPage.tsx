@@ -11,25 +11,25 @@ export const AdminWinnerPage: React.FC = () => {
   const contest = dbStore.getContests().find(c => c.id === id);
   const submissions = dbStore.getSubmissions().filter(s => s.contest_id === id);
   const reviews = dbStore.getReviews().filter(r => r.contest_id === id);
-  const allUsers = dbStore.getUsers();
+  const registrations = dbStore.getRegistrations().filter(r => r.contest_id === id);
 
   const currentWinner = contest?.winner;
 
   // Finalist candidates (sorted by score)
   const candidateUsers = submissions.map(sub => {
-    const u = allUsers.find(user => user.id === sub.user_id);
-    const rev = reviews.find(r => r.user_id === sub.user_id);
+    const reg = registrations.find(r => r.id === sub.registration_id);
+    const rev = reviews.find(r => r.registration_id === sub.registration_id);
     return {
-      userId: sub.user_id,
-      fullName: u?.full_name || 'Tester',
-      email: u?.email,
+      registrationId: sub.registration_id || '',
+      fullName: reg?.full_name || 'Tester',
+      email: reg?.email,
       score: rev?.overall_score || 0,
       status: rev?.review_status || 'pending',
     };
   }).sort((a, b) => b.score - a.score);
 
-  const [winnerUserId, setWinnerUserId] = useState<string>(
-    currentWinner?.winner_user_id || candidateUsers[0]?.userId || ''
+  const [winnerRegistrationId, setWinnerRegistrationId] = useState<string>(
+    currentWinner?.winner_registration_id || candidateUsers[0]?.registrationId || ''
   );
   const [prizeTitle, setPrizeTitle] = useState<string>(currentWinner?.prize_title || '1st Place Grand Winner');
   const [prizeAmount, setPrizeAmount] = useState<number>(currentWinner?.prize_amount || contest?.prize_amount || 1000);
@@ -47,11 +47,11 @@ export const AdminWinnerPage: React.FC = () => {
 
   const handlePublishWinner = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!id || !winnerUserId) return;
+    if (!id || !winnerRegistrationId) return;
 
     dbStore.publishWinner({
       contest_id: id,
-      winner_user_id: winnerUserId,
+      winner_registration_id: winnerRegistrationId,
       prize_title: prizeTitle,
       prize_amount: Number(prizeAmount),
       announcement_headline: headline,
@@ -61,7 +61,7 @@ export const AdminWinnerPage: React.FC = () => {
 
     setPublished(true);
     setTimeout(() => {
-      navigate('/admin/contests');
+      navigate('/plasma/contests');
     }, 2000);
   };
 
@@ -69,7 +69,7 @@ export const AdminWinnerPage: React.FC = () => {
     <div className="max-w-3xl mx-auto space-y-8 py-6">
       
       <div className="flex items-center gap-3">
-        <Link to="/admin/contests" className="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-white/10">
+        <Link to="/plasma/contests" className="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-white/10">
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div>
@@ -95,10 +95,10 @@ export const AdminWinnerPage: React.FC = () => {
         <div className="form-group">
           <label className="form-label">Select Official Winner from Participants *</label>
           <select
-            value={winnerUserId}
+            value={winnerRegistrationId}
             onChange={e => {
-              setWinnerUserId(e.target.value);
-              const sel = candidateUsers.find(c => c.userId === e.target.value);
+              setWinnerRegistrationId(e.target.value);
+              const sel = candidateUsers.find(c => c.registrationId === e.target.value);
               if (sel) {
                 setHeadline(`${sel.fullName} Wins ${contest?.title}!`);
               }
@@ -106,7 +106,7 @@ export const AdminWinnerPage: React.FC = () => {
             className="form-select text-sm font-semibold"
           >
             {candidateUsers.map(c => (
-              <option key={c.userId} value={c.userId}>
+              <option key={c.registrationId} value={c.registrationId}>
                 {c.fullName} ({c.email}) — Judge Score: {c.score}/10 [{c.status}]
               </option>
             ))}
@@ -170,7 +170,7 @@ export const AdminWinnerPage: React.FC = () => {
         </div>
 
         <div className="pt-4 border-t border-white/10 flex items-center justify-end gap-4">
-          <Link to="/admin/contests" className="btn btn-ghost">Cancel</Link>
+          <Link to="/plasma/contests" className="btn btn-ghost">Cancel</Link>
           <button type="submit" className="btn bg-pink-600 hover:bg-pink-500 text-white px-8 py-3 flex items-center gap-2">
             <Send className="w-4 h-4" /> Officially Publish Winner
           </button>

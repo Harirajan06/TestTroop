@@ -11,13 +11,13 @@ export const AdminReviewsPage: React.FC = () => {
 
   const contest = dbStore.getContests().find(c => c.id === id);
   const submissions = dbStore.getSubmissions().filter(s => s.contest_id === id);
-  const allUsers = dbStore.getUsers();
+  const registrations = dbStore.getRegistrations().filter(r => r.contest_id === id);
   const reviews = dbStore.getReviews().filter(r => r.contest_id === id);
 
-  const [selectedUserId, setSelectedUserId] = useState<string>(submissions[0]?.user_id || '');
+  const [selectedRegistrationId, setSelectedRegistrationId] = useState<string>(submissions[0]?.registration_id || '');
 
   // Form State for selected participant
-  const currentReview = reviews.find(r => r.user_id === selectedUserId);
+  const currentReview = reviews.find(r => r.registration_id === selectedRegistrationId);
 
   const [bugQualityScore, setBugQualityScore] = useState<number>(currentReview?.bug_quality_score || 8.0);
   const [coverageScore, setCoverageScore] = useState<number>(currentReview?.coverage_score || 8.5);
@@ -32,9 +32,9 @@ export const AdminReviewsPage: React.FC = () => {
     return Number(((bugQualityScore + coverageScore + uiScore + suggestionScore) / 4).toFixed(2));
   };
 
-  const handleSelectParticipant = (userId: string) => {
-    setSelectedUserId(userId);
-    const existing = reviews.find(r => r.user_id === userId);
+  const handleSelectParticipant = (registrationId: string) => {
+    setSelectedRegistrationId(registrationId);
+    const existing = reviews.find(r => r.registration_id === registrationId);
     if (existing) {
       setBugQualityScore(existing.bug_quality_score);
       setCoverageScore(existing.coverage_score);
@@ -54,13 +54,13 @@ export const AdminReviewsPage: React.FC = () => {
 
   const handleSaveReview = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedUserId || !id) return;
+    if (!selectedRegistrationId || !id) return;
 
     const overall = calculateOverall();
 
     dbStore.saveReview({
       contest_id: id,
-      user_id: selectedUserId,
+      registration_id: selectedRegistrationId,
       reviewer_id: currentAdmin?.id,
       bug_quality_score: bugQualityScore,
       coverage_score: coverageScore,
@@ -75,14 +75,14 @@ export const AdminReviewsPage: React.FC = () => {
     setTimeout(() => setSavedSuccess(false), 3000);
   };
 
-  const selectedUser = allUsers.find(u => u.id === selectedUserId);
+  const selectedRegistration = registrations.find(r => r.id === selectedRegistrationId);
 
   return (
     <div className="space-y-8">
       
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link to="/admin/contests" className="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-white/10">
+          <Link to="/plasma/contests" className="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-white/10">
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
@@ -95,7 +95,7 @@ export const AdminReviewsPage: React.FC = () => {
           </div>
         </div>
 
-        <Link to={`/admin/contests/${id}/winner`} className="btn btn-primary text-xs flex items-center gap-2">
+        <Link to={`/plasma/contests/${id}/winner`} className="btn btn-primary text-xs flex items-center gap-2">
           <Award className="w-4 h-4 text-pink-400" /> Proceed to Winner Selection
         </Link>
       </div>
@@ -116,14 +116,14 @@ export const AdminReviewsPage: React.FC = () => {
 
             <div className="space-y-2">
               {submissions.map(sub => {
-                const tester = allUsers.find(u => u.id === sub.user_id);
-                const rev = reviews.find(r => r.user_id === sub.user_id);
-                const isSelected = sub.user_id === selectedUserId;
+                const tester = registrations.find(r => r.id === sub.registration_id);
+                const rev = reviews.find(r => r.registration_id === sub.registration_id);
+                const isSelected = sub.registration_id === selectedRegistrationId;
 
                 return (
                   <button
                     key={sub.id}
-                    onClick={() => handleSelectParticipant(sub.user_id)}
+                    onClick={() => handleSelectParticipant(sub.registration_id || '')}
                     className={`w-full text-left p-3.5 rounded-xl border transition-all flex items-center justify-between ${
                       isSelected
                         ? 'bg-indigo-600/30 border-indigo-500 text-white shadow-lg'
@@ -156,7 +156,7 @@ export const AdminReviewsPage: React.FC = () => {
             <div className="flex items-center justify-between border-b border-white/10 pb-4">
               <div>
                 <span className="text-xs font-bold text-indigo-400 uppercase">Evaluating Tester</span>
-                <h2 className="text-xl font-bold text-white">{selectedUser?.full_name || 'Select Participant'}</h2>
+                <h2 className="text-xl font-bold text-white">{selectedRegistration?.full_name || 'Select Participant'}</h2>
               </div>
 
               <div className="text-right">
