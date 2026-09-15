@@ -50,6 +50,7 @@ const mem = {
     winners_visible: true,
     learn_visible: true,
     community_visible: true,
+    mobile_app_login_enabled: true,
   } as SiteSettings,
 };
 
@@ -155,6 +156,7 @@ export const initializeStore = (): Promise<void> => {
           winners_visible: siteSettings.winners_visible,
           learn_visible: siteSettings.learn_visible,
           community_visible: siteSettings.community_visible,
+          mobile_app_login_enabled: siteSettings.mobile_app_login_enabled,
         };
       } else {
         await supabase.from('site_settings').upsert({ id: 'global' });
@@ -239,6 +241,7 @@ export const fetchSettingsAsync = async (): Promise<SiteSettings> => {
       winners_visible: data.winners_visible,
       learn_visible: data.learn_visible,
       community_visible: data.community_visible,
+      mobile_app_login_enabled: data.mobile_app_login_enabled,
     };
   }
   return mem.settings;

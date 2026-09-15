@@ -2,7 +2,7 @@ import React from 'react';
 import { isSupabaseConfigured } from '../../lib/supabase';
 import { useSiteSettings } from '../../context/SiteSettingsContext';
 import { SiteSettings } from '../../types';
-import { Settings, ShieldCheck, Mail, Database, Server, CheckCircle2, Eye, EyeOff, Trophy, Award, BookOpen, Users } from 'lucide-react';
+import { Settings, ShieldCheck, Mail, Database, Server, CheckCircle2, Eye, EyeOff, Trophy, Award, BookOpen, Users, Smartphone, Lock, LockOpen } from 'lucide-react';
 
 const NAV_TOGGLES: { key: keyof SiteSettings; label: string; path: string; icon: React.ElementType }[] = [
   { key: 'contests_visible', label: 'Contests', path: '/contests', icon: Trophy },
@@ -66,6 +66,43 @@ export const AdminSettingsPage: React.FC = () => {
                 </div>
               );
             })}
+          </div>
+        </div>
+
+        {/* MOBILE APP CONTEST LOGIN GATE */}
+        <div className="bg-glass-card p-6 rounded-3xl border border-white/10 space-y-4">
+          <div className="border-b border-white/10 pb-4">
+            <h3 className="font-bold text-white text-base flex items-center gap-2">
+              <Smartphone className="w-5 h-5 text-indigo-400" /> CalJin AI App — Contest Login Gate
+            </h3>
+            <p className="text-gray-400 text-xs mt-1">
+              While ON, the mobile app shows a login screen and only contestant accounts (created here in Supabase Auth) can sign in.
+              Turn it OFF once the contest ends to remove the login screen from the app for everyone — including users who already installed it — with no app update needed.
+            </p>
+          </div>
+
+          <div className="flex items-center justify-between p-3.5 bg-slate-900/80 rounded-xl border border-white/5">
+            <div className="flex items-center gap-3">
+              <Smartphone className="w-4 h-4 text-indigo-400 shrink-0" />
+              <div>
+                <span className="text-sm font-semibold text-white block">App Login Screen</span>
+                <span className="text-[11px] text-gray-500 font-mono">site_settings.mobile_app_login_enabled</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              disabled={loading}
+              onClick={() => updateSettings({ mobile_app_login_enabled: !settings.mobile_app_login_enabled })}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors disabled:opacity-50 ${
+                settings.mobile_app_login_enabled
+                  ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/25'
+                  : 'bg-red-500/15 border border-red-500/30 text-red-300 hover:bg-red-500/25'
+              }`}
+            >
+              {settings.mobile_app_login_enabled ? <Lock className="w-3.5 h-3.5" /> : <LockOpen className="w-3.5 h-3.5" />}
+              <span>{settings.mobile_app_login_enabled ? 'Enabled' : 'Disabled'}</span>
+            </button>
           </div>
         </div>
 

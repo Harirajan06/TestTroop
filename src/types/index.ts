@@ -245,6 +245,7 @@ export interface SiteSettings {
   winners_visible: boolean;
   learn_visible: boolean;
   community_visible: boolean;
+  mobile_app_login_enabled: boolean;
 }
 
 export interface CampaignRecipient {
